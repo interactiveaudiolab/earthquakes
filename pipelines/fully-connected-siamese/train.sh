@@ -14,7 +14,7 @@ python /exp/code/train.py \
     --batch_size 10 \
     --num_workers 10 \
     --num_epochs 100 \
-    --transforms "demean:raw" \
+    --transforms "demean:bandpass" \
     --length 100000 \
     --sample_strategy "random" \
     --learning_rate 1e-3 \

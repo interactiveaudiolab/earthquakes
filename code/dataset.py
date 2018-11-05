@@ -82,6 +82,7 @@ class EarthquakeDataset(Dataset):
 
     @staticmethod
     def transform(sac, transforms):
+        #cut AFTER filtering
         data = []
         if 'demean' in transforms:
             sac.detrend(type='demean')

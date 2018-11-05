@@ -32,11 +32,6 @@ RUN pip install -r /requirements.txt
 RUN pip install -U git+https://github.com/pseeth/audio_embed.git
 RUN conda install pytorch torchvision -c pytorch
 
-ADD pysmo /pysmo
-RUN cd /pysmo && \
-    python setup.py install
-
-
 
 USER $user_name
 ENV JUPYTER_PASSWORD sha1:7c4613b10073:01d7dcef0bdae99ced22d7aebaa61d931f446b27
