@@ -34,7 +34,7 @@ RUN conda install pytorch torchvision -c pytorch
 
 
 USER $user_name
-ENV JUPYTER_PASSWORD sha1:7c4613b10073:01d7dcef0bdae99ced22d7aebaa61d931f446b27
+ENV JUPYTER_PASSWORD sha1:9043ec94ab4d:021f1afd47a6b5798dca9e1c4387e0207f400263
 # Obtain the SHA hash for your chosen password and copy it above. To do this, use:
 # from notebook.auth import passwd
 # passwd()
