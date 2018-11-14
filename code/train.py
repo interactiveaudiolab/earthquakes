@@ -58,14 +58,16 @@ dataloader = DataLoader(dataset,
                         sampler=sample_strategy,
                         drop_last=True)
 
-model = networks.FullyConnected(input_size=args.length)
-model = model.to(device)
-utils.show_model(model)
 
+class_func = utils.model_functions[args.model_type]
+model = utils.load_class_from_params(vars(args), class_func).to(device)
+model.train()
+utils.show_model(model)
 
 parameters = filter(lambda p: p.requires_grad, model.parameters())
 optimizer = torch.optim.Adam(parameters,
-                            lr=args.learning_rate)
+                            lr=args.learning_rate,
+                            weight_decay=args.weight_decay)
 
 epochs = trange(args.num_epochs)
 loss_function = loss.ContrastiveLoss(margin=2.0)
@@ -73,11 +75,12 @@ n_iter = 0
 for epoch in epochs:
     progress_bar = trange(len(dataloader))
     epoch_loss = []
-    for (data, label) in dataloader:
-        data = data.to(device).requires_grad_().float()
-        label = label.to(device).float()
-
+    for data_dict in dataloader:
+        data = data_dict['data'].to(device).requires_grad_().float()
+        label = data_dict['label'].to(device).float()
+        data = data.view(-1, 1, data.shape[-1])
         output = model(data)
+        output = output.view(-1, 2, output.shape[-1])
         _loss = loss_function(output, label)
 
         _loss.backward()

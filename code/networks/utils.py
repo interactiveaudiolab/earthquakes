@@ -3,8 +3,13 @@ import torch
 import shutil
 import os
 import json
-from networks import FullyConnected
+import networks
 import inspect
+
+model_functions = {
+    'fc': networks.FullyConnected,
+    'conv': networks.DilatedConvolutional
+}
 
 def show_model(model):
     print(model)
@@ -33,23 +38,23 @@ def load_model(run_directory, device_target='cuda'):
     model = None
     device = None
 
-    if 'spatial' not in run_directory:
-        saved_model_path = os.path.join(run_directory, 'checkpoints/latest.h5')
-        device = torch.device('cuda', 1) if device_target == 'cuda' else torch.device('cpu')
-        class_func = FullyConnected
-        model = load_class_from_params(args, class_func).to(device)
+    saved_model_path = os.path.join(run_directory, 'checkpoints/latest.h5')
+    device = torch.device('cuda', 1) if device_target == 'cuda' else torch.device('cpu')
+    class_func = model_functions[args['model_type']]
+    model = load_class_from_params(args, class_func).to(device)
 
-        model.eval()
-        checkpoint = torch.load(saved_model_path)
-        model.load_state_dict(checkpoint['state_dict'])
+    model.eval()
+    checkpoint = torch.load(saved_model_path)
+    model.load_state_dict(checkpoint['state_dict'])
 
     return model, args, device
 
-def visualize_embedding(embeddings, labels, output_file):
+def visualize_embedding(embeddings, labels, output_file, pca=None):
     from sklearn.decomposition import PCA
     import matplotlib.pyplot as plt
-    pca = PCA(n_components=2)
-    pca.fit(embeddings)
+    if pca is None:
+        pca = PCA(n_components=2)
+        pca.fit(embeddings)
     output = pca.transform(embeddings)
     colors = np.argmax(labels, axis=-1)
     plt.style.use('classic')
@@ -60,3 +65,5 @@ def visualize_embedding(embeddings, labels, output_file):
     plt.colorbar()
     plt.tight_layout()
     plt.savefig(output_file)
+
+    return pca

@@ -9,6 +9,7 @@ mkdir -p runs/$run_id
 cp train.sh runs/${run_id}/${run_id}_train.sh
 
 python /exp/code/train.py \
+    --model_type "fc" \
     --output_directory "runs/$run_id" \
     --dataset_directory "/exp/data/prepared/" \
     --batch_size 10 \

@@ -7,14 +7,18 @@ metadata:
 pipelines:
   convolutional-siamese:
     envs:
-      host:
-        args: []
+      local/earthquake:
+        args: !!set
+          --ipc=host: null
+          --runtime=nvidia: null
+          --volume=/home/prem/research/earthquakes/:/exp: null
     parameters: []
     path: pipelines/convolutional-siamese
     requirements: {}
     stages:
     - train
     - test
+    timeout: 0
   create-docker-environment:
     envs:
       host:

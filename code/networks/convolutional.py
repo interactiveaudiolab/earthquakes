@@ -1,32 +1,25 @@
 from torch import nn
 import torch.nn.functional as F
+import torch
 
-class SiameseNetwork(nn.Module):
-    def __init__(self):
-        super(SiameseNetwork, self).__init__()
-        self.cnn1 = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=(3, 3), stride=(2, 2)),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(32, 32, kernel_size=(3, 3), stride=(2, 2)),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(32, 32, kernel_size=(3, 3), stride=(2, 2)),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(32, 32, kernel_size=(3, 3), stride=(2, 2)),
-            nn.ReLU(inplace=True),
-        )
-        self.fc1 = nn.Sequential(
-            nn.Linear(32, 10))
+class DilatedConvolutional(nn.Module):
+    def __init__(self, embedding_size):
+        super(DilatedConvolutional, self).__init__()
+        dilations = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+        channels = [1, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32]
+        self.main = nn.Sequential()
+        for i, d in enumerate(dilations):
+            self.main.add_module(str(i) + '_batch_norm', nn.BatchNorm1d(channels[i]))
+            self.main.add_module(str(i), nn.Conv1d(in_channels=channels[i],
+                                                   out_channels=channels[i + 1],
+                                                   kernel_size=2,
+                                                   dilation=d,
+                                                   padding=d))
+            self.main.add_module(str(i) + '_relu', nn.ReLU())
+        self.main.add_module('pool', nn.AdaptiveAvgPool1d(1))
+        self.fc = nn.Linear(channels[-1], embedding_size)
 
-    def forward_once(self, input_data):
-        num_batch = input_data.size(0)
-        input_data = input_data.unsqueeze(1)
-        output = self.cnn1(input_data)
-        output = F.adaptive_avg_pool2d(output, (1, 1)).squeeze(-1).squeeze(-1)
-        embedding = self.fc1(output)
-        # embedding = nn.functional.normalize(embedding, p=2, dim=-1)
-        return embedding
-
-    def forward(self, input_one, input_two):
-        output_one = self.forward_once(input_one)
-        output_two = self.forward_once(input_two)
-        return output_one, output_two
+    def forward(self, input):
+        output = self.main(input).squeeze(-1)
+        output = self.fc(output)
+        return output

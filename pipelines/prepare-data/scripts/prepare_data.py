@@ -45,9 +45,9 @@ def load_data(directory, label, target_directory):
             data_dict['name'] = directory.split('/')[-2]
             save_file(os.path.join(target_directory, '%s_%s.p' % (earthquake_file, label)), data_dict)
 
-target_directory = '/data/prepared'
+target_directory = '/data/trigger/prepared'
 os.makedirs(target_directory, exist_ok=True)
 for f in folders:
     load_data(os.path.join(f, 'positive'), 'positive', target_directory)
     load_data(os.path.join(f, 'negative'), 'negative', target_directory)
-    load_data(os.path.join(f, 'chaos'), 'chaos', target_directory)
+    #load_data(os.path.join(f, 'chaos'), 'chaos', target_directory)

@@ -12,21 +12,36 @@ class SiameseDataset(Dataset):
     def __getitem__(self, i):
         item_one = self.dataset[i]
         item_two = self.dataset[np.random.randint(0, len(self.dataset))]
-        data = np.vstack([item_one[0], item_two[0]])
-        label = np.vstack([item_one[1], item_two[1]])
-        return data, label
+
+        coin_flip = np.random.random()
+        if coin_flip > .5:
+            while np.argmax(item_two['label']) == np.argmax(item_one['label']):
+                item_two = self.dataset[np.random.randint(0, len(self.dataset))]
+        else:
+            while np.argmax(item_two['label']) != np.argmax(item_one['label']):
+                item_two = self.dataset[np.random.randint(0, len(self.dataset))]
+
+        data = np.vstack([item_one['data'], item_two['data']])
+        label = np.vstack([item_one['label'], item_two['label']])
+        return {'data': data, 'label': label}
 
     def __len__(self):
         return len(self.dataset)
 
+#class Augmenter(Dataset):
+
+
 class EarthquakeDataset(Dataset):
-    def __init__(self, folder, transforms='demean', length=20000, split=''):
+    def __init__(self, folder, transforms='demean', length=20000, split='', filter_labels=('positive', 'negative')):
         self.folder = folder
         self.files = sorted([os.path.join(folder, x) for x in os.listdir(folder) if '.p' in x])
         labels = []
         for fname in self.files:
             label = fname.split('_')[-1][:-2]
-            labels.append(label)
+            if label in filter_labels:
+                labels.append(label)
+            else:
+                self.files.remove(fname)
         self.labels = sorted(list(set(labels)))
         self.length = length
         self.transforms = transforms.split(':')
@@ -42,9 +57,10 @@ class EarthquakeDataset(Dataset):
         one_hot = np.zeros(len(self.labels))
         one_hot[index] = 1
 
-        sac.data = self.get_target_length_and_transpose(sac.data, self.length)
         data = self.transform(sac, self.transforms)
-        return data, one_hot
+        data = self.get_target_length_and_transpose(data, self.length)
+
+        return {'data': data, 'label': one_hot}
 
     def __len__(self):
         return len(self.files)
@@ -75,14 +91,13 @@ class EarthquakeDataset(Dataset):
 
         pad_length = max(target_length - length, 0)
         pad_tuple = [(0, 0) for k in range(len(data.shape))]
-        pad_tuple[0] = (0, pad_length)
+        pad_tuple[1] = (0, pad_length)
         data = np.pad(data, pad_tuple, mode='constant')
-        data = data[offset:offset + target_length]
+        data = data[:, offset:offset+target_length]
         return data
 
     @staticmethod
     def transform(sac, transforms):
-        #cut AFTER filtering
         data = []
         if 'demean' in transforms:
             sac.detrend(type='demean')
@@ -96,5 +111,8 @@ class EarthquakeDataset(Dataset):
             sac_copy = copy.deepcopy(sac)
             sac_copy.filter('lowpass', freq=2)
             data.append(sac_copy.data)
-
-        return np.stack(data, axis=-1).T
+        data = np.stack(data, axis=0)
+        if 'whiten' in transforms:
+            data -= data.mean()
+            data /= data.std() + 1e-6
+        return data

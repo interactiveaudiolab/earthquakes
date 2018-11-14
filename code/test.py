@@ -12,6 +12,9 @@ from argparse import Namespace
 import pickle
 import numpy as np
 import matplotlib
+from sklearn.svm import SVC
+from pycm import ConfusionMatrix
+
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
@@ -33,32 +36,59 @@ dataset = EarthquakeDataset(folder=args.dataset_directory,
                             transforms=args.transforms,
                             length=args.length,
                             split=args.split)
-dataset.toggle_split()
-dataloader = DataLoader(dataset,
-                        batch_size=args.batch_size,
-                        num_workers=args.num_workers,
-                        drop_last=True)
 
 model, _, _ = utils.load_model(args.output_directory, device_target='cuda')
 model.to(device)
+model.eval()
 
-progress_bar = trange(len(dataloader))
-epoch_loss = []
-embeddings = []
-labels = []
-for (data, label) in dataloader:
-    data = data.to(device).requires_grad_().float()
-    label = label.to(device).float()
-    output = model(data).squeeze(1)
-    embeddings.append(output.cpu().data.numpy())
-    labels.append(label.cpu().data.numpy())
-    progress_bar.update(1)
 
-embeddings = np.vstack(embeddings)
-labels = np.vstack(labels)
+def get_embeddings(dataset, model):
+    dataloader = DataLoader(dataset,
+                            batch_size=args.batch_size,
+                            num_workers=args.num_workers,
+                            drop_last=True)
 
-with open(os.path.join(args.output_directory, 'output.p'), 'wb') as f:
-    data_dict = {'embeddings': embeddings, 'labels': labels}
-    pickle.dump(data_dict, f)
+    epoch_loss = []
+    embeddings = []
+    labels = []
+    for data_dict in dataloader:
+        data = data_dict['data'].to(device).requires_grad_().float()
+        label = data_dict['label'].to(device).float()
+        output = model(data).squeeze(1)
+        embeddings.append(output.cpu().data.numpy())
+        labels.append(label.cpu().data.numpy())
+    return np.vstack(embeddings), np.vstack(labels)
 
-utils.visualize_embedding(embeddings, labels, os.path.join(args.output_directory, 'viz.png'))
+
+def train_svm(embeddings, labels):
+    print(embeddings.shape, labels.shape)
+    svc = SVC(kernel='rbf')
+    svc.fit(embeddings, np.argmax(labels, axis=-1))
+    return svc
+
+
+print('Getting train embeddings')
+embeddings, labels = get_embeddings(dataset, model)
+plt.clf()
+pca = utils.visualize_embedding(embeddings, labels, os.path.join(args.output_directory, 'tr_viz.png'))
+
+print('Training SVM')
+svc = train_svm(embeddings, labels)
+
+print('Getting test embeddings')
+dataset.toggle_split()
+embeddings, labels = get_embeddings(dataset, model)
+plt.clf()
+utils.visualize_embedding(embeddings, labels, os.path.join(args.output_directory, 'tt_viz.png'), pca=pca)
+
+print('Predicting on test embeddings with SVM')
+predictions = svc.predict(embeddings)
+ground_truth = np.argmax(labels, axis=-1)
+
+cm = ConfusionMatrix(predict_vector=predictions, actual_vector=ground_truth)
+
+print('Results')
+print(str(cm))
+
+with open(os.path.join(args.output_directory, 'results.txt'), 'w') as f:
+    f.write(str(cm))

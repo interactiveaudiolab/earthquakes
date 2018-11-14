@@ -12,4 +12,4 @@ torch
 torchvision
 h5py
 obspy
-pysmo
+pycm
