@@ -23,7 +23,8 @@ class SiameseDataset(Dataset):
 
         data = np.vstack([item_one['data'], item_two['data']])
         label = np.vstack([item_one['label'], item_two['label']])
-        return {'data': data, 'label': label}
+        weights = np.vstack([item_one['weight'], item_two['weight']])
+        return {'data': data, 'label': label, 'weight': weights}
 
     def __len__(self):
         return len(self.dataset)
@@ -32,7 +33,7 @@ class SiameseDataset(Dataset):
 
 
 class EarthquakeDataset(Dataset):
-    def __init__(self, folder, transforms='demean', length=20000, split='', filter_labels=('positive', 'negative')):
+    def __init__(self, folder, transforms='demean', length=20000, split='', augmentations='', filter_labels=('positive', 'negative')):
         self.folder = folder
         self.files = sorted([os.path.join(folder, x) for x in os.listdir(folder) if '.p' in x])
         labels = []
@@ -45,6 +46,7 @@ class EarthquakeDataset(Dataset):
         self.labels = sorted(list(set(labels)))
         self.length = length
         self.transforms = transforms.split(':')
+        self.augmentations = augmentations.split(':')
         self.split = split.split(':')
         self.split = self.filter_files(split)
 
@@ -57,10 +59,13 @@ class EarthquakeDataset(Dataset):
         one_hot = np.zeros(len(self.labels))
         one_hot[index] = 1
 
-        data = self.transform(sac, self.transforms)
+        data = self.pre_transform(sac, self.transforms)
         data = self.get_target_length_and_transpose(data, self.length)
+        weight = 1.0
+        data = self.augment(data, self.augmentations)
+        data = self.post_transform(data, self.transforms)
 
-        return {'data': data, 'label': one_hot}
+        return {'data': data, 'label': one_hot, 'weight': weight}
 
     def __len__(self):
         return len(self.files)
@@ -88,7 +93,6 @@ class EarthquakeDataset(Dataset):
             offset = np.random.randint(0, length - target_length)
         else:
             offset = 0
-
         pad_length = max(target_length - length, 0)
         pad_tuple = [(0, 0) for k in range(len(data.shape))]
         pad_tuple[1] = (0, pad_length)
@@ -97,7 +101,7 @@ class EarthquakeDataset(Dataset):
         return data
 
     @staticmethod
-    def transform(sac, transforms):
+    def pre_transform(sac, transforms):
         data = []
         if 'demean' in transforms:
             sac.detrend(type='demean')
@@ -112,7 +116,26 @@ class EarthquakeDataset(Dataset):
             sac_copy.filter('lowpass', freq=2)
             data.append(sac_copy.data)
         data = np.stack(data, axis=0)
+        return data
+
+    @staticmethod
+    def post_transform(data, transforms):
         if 'whiten' in transforms:
             data -= data.mean()
             data /= data.std() + 1e-6
+        return data
+
+    @staticmethod
+    def augment(data, augmentations):
+        if 'amplitude' in augmentations:
+            start_gain, end_gain = [np.random.random(), np.random.random()]
+            amplitude_mod = np.linspace(start_gain, end_gain, num=data.shape[-1])
+            data *= amplitude_mod
+
+        if 'noise' in augmentations:
+            std = data.std() * np.random.uniform(1, 2)
+            mean = data.mean()
+            noise = np.random.normal(loc=mean, scale=std, size=data.shape)
+            data += noise
+            
         return data

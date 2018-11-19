@@ -9,6 +9,7 @@ def construct_parser():
     parser.add_argument("--num_workers", default=1, type=int)
     parser.add_argument("--num_epochs", default=40, type=int)
     parser.add_argument("--transforms", default='demean:raw', type=str)
+    parser.add_argument("--augmentations", default='', type=str)
     parser.add_argument("--length", default=100000, type=int)
     parser.add_argument("--sample_strategy", default='sequential', type=str)
     parser.add_argument("--training_strategy", default='siamese', type=str)

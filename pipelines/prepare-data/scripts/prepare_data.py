@@ -31,6 +31,7 @@ def load_data(directory, label, target_directory):
         earthquake_file = earthquake_files[i]
         progress_bar.set_description(os.path.join(directory, earthquake_file))
         earthquake = obspy.read(os.path.join(directory, earthquake_file))[0]
+        earthquake.resample(sampling_rate=20, window='hanning', no_filter=True, strict_length=False)
         sample_rate = earthquake.stats.sampling_rate
         times, data = earthquake.times(), earthquake.data
         start, stop = surface_window[earthquake_file.split('BH')[0]]

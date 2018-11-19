@@ -12,14 +12,15 @@ python /exp/code/train.py \
     --model_type "conv" \
     --output_directory "runs/$run_id" \
     --dataset_directory "/exp/data/trigger/prepared/" \
-    --batch_size 10 \
+    --batch_size 40 \
     --num_workers 10 \
     --num_epochs 100 \
     --transforms "bandpass:whiten" \
-    --length 10000 \
-    --sample_strategy "random" \
-    --learning_rate 1e-4 \
-    --weight_decay 1e-2 \
+    --augmentations "noise:amplitude" \
+    --length 100000 \
+    --sample_strategy "sequential" \
+    --learning_rate 1e-3 \
+    --weight_decay 1e-3 \
     --split "SAC_20100227_Chile_prem" \
     --embedding_size 10 \
     --loss_function "dpcl"

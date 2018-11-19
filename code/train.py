@@ -41,6 +41,7 @@ os.makedirs(os.path.join(args.output_directory, 'checkpoints'), exist_ok=True)
 
 dataset = EarthquakeDataset(folder=args.dataset_directory,
                             transforms=args.transforms,
+                            augmentations=args.augmentations,
                             length=args.length,
                             split=args.split)
 
@@ -82,16 +83,17 @@ for epoch in epochs:
     for data_dict in dataloader:
         data = data_dict['data'].to(device).requires_grad_().float()
         label = data_dict['label'].to(device).float()
+        weight = data_dict['weight'].to(device).float()
         num = data.shape[1]
         data = data.view(-1, 1, data.shape[-1])
         output = model(data)
         output = output.view(-1, num, output.shape[-1])
-        _loss = loss_function(output, label)
+        _loss = loss_function(output, label, weight)
 
         _loss.backward()
         optimizer.step()
 
-        progress_bar.set_description(str(_loss))
+        progress_bar.set_description(str(_loss.item()))
         progress_bar.update(1)
         writer.add_scalar('iter_loss/scalar', _loss.item(), n_iter)
         epoch_loss.append(_loss.item())

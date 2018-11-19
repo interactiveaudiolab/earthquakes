@@ -13,6 +13,7 @@ import pickle
 import numpy as np
 import matplotlib
 from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
 from pycm import ConfusionMatrix
 
 matplotlib.use('agg')
@@ -62,7 +63,8 @@ def get_embeddings(dataset, model):
 
 def train_svm(embeddings, labels):
     print(embeddings.shape, labels.shape)
-    svc = SVC(kernel='rbf')
+    #svc = SVC(kernel='rbf')
+    svc = KNeighborsClassifier()
     svc.fit(embeddings, np.argmax(labels, axis=-1))
     return svc
 

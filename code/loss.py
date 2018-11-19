@@ -42,9 +42,10 @@ class DeepClusteringLoss(nn.Module):
 
         embedding = embedding.view(batch_size, -1, embedding_size)
         assignments = assignments.view(batch_size, -1, num_sources)
+        num_points = embedding.shape[1]
 
         if weights is None:
-            weights = torch.ones(assignments.shape[1])
+            weights = embedding.new(batch_size, num_points).fill_(1.0)
         weights = weights.view(batch_size, -1, 1)
         assignments = weights.expand_as(assignments) * assignments
         embedding = weights.expand_as(embedding) * embedding
