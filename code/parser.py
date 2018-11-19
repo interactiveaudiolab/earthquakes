@@ -16,4 +16,5 @@ def construct_parser():
     parser.add_argument("--learning_rate", default=1e-3, type=float)
     parser.add_argument("--embedding_size", default=10, type=int)
     parser.add_argument("--weight_decay", default=0, type=float)
+    parser.add_argument("--loss_function", choices=['dpcl', 'cl'], default='dpcl', type=str)
     return parser

@@ -70,7 +70,11 @@ optimizer = torch.optim.Adam(parameters,
                             weight_decay=args.weight_decay)
 
 epochs = trange(args.num_epochs)
-loss_function = loss.ContrastiveLoss(margin=2.0)
+if args.loss_function == 'dpcl':
+    loss_function = loss.DeepClusteringLoss()
+elif args.loss_function == 'cl':
+    loss_function = loss.ContrastiveLoss(margin=2.0)
+
 n_iter = 0
 for epoch in epochs:
     progress_bar = trange(len(dataloader))
@@ -78,9 +82,10 @@ for epoch in epochs:
     for data_dict in dataloader:
         data = data_dict['data'].to(device).requires_grad_().float()
         label = data_dict['label'].to(device).float()
+        num = data.shape[1]
         data = data.view(-1, 1, data.shape[-1])
         output = model(data)
-        output = output.view(-1, 2, output.shape[-1])
+        output = output.view(-1, num, output.shape[-1])
         _loss = loss_function(output, label)
 
         _loss.backward()
@@ -92,8 +97,7 @@ for epoch in epochs:
         epoch_loss.append(_loss.item())
         n_iter += 1
 
-    _loss = np.mean(epoch_loss)
-    writer.add_scalar('epoch_loss/scalar', _loss, epoch)
+    writer.add_scalar('epoch_loss/scalar', np.mean(epoch_loss), epoch)
 
     utils.save_checkpoint({
         'epoch': epoch + 1,

@@ -21,4 +21,5 @@ python /exp/code/train.py \
     --learning_rate 1e-4 \
     --weight_decay 1e-2 \
     --split "SAC_20100227_Chile_prem" \
-    --embedding_size 10
+    --embedding_size 10 \
+    --loss_function "dpcl"

@@ -2,3 +2,6 @@
 popper
 .cache
 popper
+.pyc
+earthquake/
+.SAC
