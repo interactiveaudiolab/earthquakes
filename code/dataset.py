@@ -136,6 +136,8 @@ class EarthquakeDataset(Dataset):
             std = data.std() * np.random.uniform(1, 2)
             mean = data.mean()
             noise = np.random.normal(loc=mean, scale=std, size=data.shape)
-            data += noise
+            coin_flip = np.random.random()
+            if coin_flip > .5:
+                data += noise
             
         return data

@@ -21,6 +21,6 @@ python /exp/code/train.py \
     --sample_strategy "sequential" \
     --learning_rate 1e-3 \
     --weight_decay 1e-3 \
-    --split "SAC_20100227_Chile_prem" \
+    --split "SAC_20010126_XF_prem/" \
     --embedding_size 10 \
     --loss_function "dpcl"
