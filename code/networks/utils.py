@@ -39,7 +39,7 @@ def load_model(run_directory, device_target='cuda'):
     device = None
 
     saved_model_path = os.path.join(run_directory, 'checkpoints/latest.h5')
-    device = torch.device('cuda', 1) if device_target == 'cuda' else torch.device('cpu')
+    device = torch.device('cuda') if device_target == 'cuda' else torch.device('cpu')
     class_func = model_functions[args['model_type']]
     model = load_class_from_params(args, class_func).to(device)
 

@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM nvidia/cuda
+FROM nvidia/cuda:9.0-base
 
 ARG user_id
 ARG user_name

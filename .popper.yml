@@ -11,7 +11,7 @@ pipelines:
         args: !!set
           --ipc=host: null
           --runtime=nvidia: null
-          --volume=/home/prem/research/earthquakes/:/exp: null
+          --volume=/home/vivian/research/earthquakes/earthquakes/:/exp: null
     parameters: []
     path: pipelines/convolutional-siamese
     requirements: {}
@@ -42,7 +42,7 @@ pipelines:
         args: !!set
           --ipc=host: null
           --runtime=nvidia: null
-          --volume=/home/prem/research/earthquakes/:/exp: null
+          --volume=/home/vivian/research/earthquakes/earthquakes/:/exp: null
     parameters: []
     path: pipelines/fully-connected-siamese
     requirements: {}
@@ -56,7 +56,7 @@ pipelines:
         args: !!set
           --ipc=host: null
           --runtime=runc: null
-          --volume=/home/prem/research/earthquakes/data/:/data: null
+          --volume=/home/vivian/research/earthquakes/earthquakes/data:/data: null
     path: pipelines/prepare-data
     requirements: {}
     stages:
