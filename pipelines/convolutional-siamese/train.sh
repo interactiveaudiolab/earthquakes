@@ -14,7 +14,7 @@ python /exp/code/train.py \
     --dataset_directory "/exp/data/trigger/prepared/" \
     --batch_size 40 \
     --num_workers 10 \
-    --num_epochs 1 \
+    --num_epochs 100 \
     --transforms "bandpass:whiten" \
     --augmentations "noise:amplitude" \
     --length 50000 \
