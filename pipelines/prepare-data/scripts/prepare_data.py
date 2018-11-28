@@ -40,7 +40,7 @@ def load_data(directory, label, target_directory):
 
         save_file(os.path.join(target_directory, '%s_%s_%s.p' % (label, data_dict['name'], earthquake_file)), data_dict)
 
-target_directory = '/data/trigger/prepared'
+target_directory = '/data/prepared/trigger'
 os.makedirs(target_directory, exist_ok=True)
 for f in folders:
     load_data(os.path.join(f, 'positive'), 'positive', target_directory)

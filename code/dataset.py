@@ -44,7 +44,7 @@ class EarthquakeDataset(Dataset):
         self.transforms = transforms.split(':')
         self.augmentations = augmentations.split(':')
         self.split = split.split(':')
-        self.split = self.filter_files(split)
+        self.split, self.files = self.filter_files(split)
 
     def __getitem__(self, i):
         with open(self.files[i], 'rb') as f:
@@ -86,13 +86,15 @@ class EarthquakeDataset(Dataset):
 
     def filter_files(self, split):
         split_files = []
-        for fname in self.files:
+        remaining_files = []
+        for i, fname in enumerate(self.files):
             with open(fname, 'rb') as f:
                 earthquake = pickle.load(f)
             if earthquake['name'] in split:
                 split_files.append(fname)
-                self.files.remove(fname)
-        return split_files
+            else:
+                remaining_files.append(fname)
+        return split_files, remaining_files
 
     def get_target_length_and_transpose(self, data, target_length):
         length = data.shape[-1]
