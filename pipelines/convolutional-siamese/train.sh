@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # [wf] execute train stage
 
-echo $split
-
 mkdir -p runs
 num_run=$(ls runs/ | wc -l |  tr -d ' ')
 run_id="run$num_run"
@@ -16,10 +14,10 @@ python /exp/code/train.py \
     --dataset_directory "/exp/data/trigger/prepared/" \
     --batch_size 40 \
     --num_workers 10 \
-    --num_epochs 100 \
+    --num_epochs 1 \
     --transforms "bandpass:whiten" \
     --augmentations "noise:amplitude" \
-    --length 100000 \
+    --length 50000 \
     --sample_strategy "sequential" \
     --learning_rate 1e-3 \
     --weight_decay 1e-3 \

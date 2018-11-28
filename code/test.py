@@ -35,6 +35,7 @@ args = Namespace(**args)
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 dataset = EarthquakeDataset(folder=args.dataset_directory,
                             transforms=args.transforms,
+                            augmentations='',
                             length=args.length,
                             split=args.split)
 
@@ -42,13 +43,12 @@ model, _, _ = utils.load_model(args.output_directory, device_target='cuda')
 model.to(device)
 model.eval()
 
-
 def get_embeddings(dataset, model):
     dataloader = DataLoader(dataset,
-                            batch_size=args.batch_size,
-                            num_workers=args.num_workers,
-                            drop_last=True)
-
+                        batch_size=args.batch_size,
+                        num_workers=args.num_workers,
+                        drop_last=False)
+    
     epoch_loss = []
     embeddings = []
     labels = []
@@ -60,7 +60,6 @@ def get_embeddings(dataset, model):
         labels.append(label.cpu().data.numpy())
     return np.vstack(embeddings), np.vstack(labels)
 
-
 def train_svm(embeddings, labels):
     print(embeddings.shape, labels.shape)
     #svc = SVC(kernel='rbf')
@@ -68,14 +67,20 @@ def train_svm(embeddings, labels):
     svc.fit(embeddings, np.argmax(labels, axis=-1))
     return svc
 
-
 print('Getting train embeddings')
 embeddings, labels = get_embeddings(dataset, model)
 plt.clf()
 pca = utils.visualize_embedding(embeddings, labels, os.path.join(args.output_directory, 'tr_viz.png'))
 
-print('Training SVM')
+print('Training KNN')
 svc = train_svm(embeddings, labels)
+
+print('Predicting on train embeddings with KNN')
+predictions = svc.predict(embeddings)
+ground_truth = np.argmax(labels, axis=-1)
+
+cm = ConfusionMatrix(predict_vector=predictions, actual_vector=ground_truth)
+print(str(cm))
 
 print('Getting test embeddings')
 dataset.toggle_split()
@@ -83,7 +88,7 @@ embeddings, labels = get_embeddings(dataset, model)
 plt.clf()
 utils.visualize_embedding(embeddings, labels, os.path.join(args.output_directory, 'tt_viz.png'), pca=pca)
 
-print('Predicting on test embeddings with SVM')
+print('Predicting on test embeddings with KNN')
 predictions = svc.predict(embeddings)
 ground_truth = np.argmax(labels, axis=-1)
 

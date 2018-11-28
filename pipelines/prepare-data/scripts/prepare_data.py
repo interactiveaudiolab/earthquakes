@@ -31,7 +31,7 @@ def load_data(directory, label, target_directory):
         earthquake_file = earthquake_files[i]
         progress_bar.set_description(os.path.join(directory, earthquake_file))
         earthquake = obspy.read(os.path.join(directory, earthquake_file))[0]
-        earthquake.resample(sampling_rate=50, window='hanning', no_filter=True, strict_length=False)
+        earthquake.resample(sampling_rate=20, window='hanning', no_filter=True, strict_length=False)
         data_dict = {}
 
         data_dict['data'] = earthquake

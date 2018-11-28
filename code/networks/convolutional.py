@@ -50,6 +50,6 @@ class DilatedConvolutional(nn.Module):
 
     def forward(self, input):
         output = self.main(input).squeeze(-1)
-        #output = torch.tanh(self.fc(output))
+        output = self.fc(output)
         output = nn.functional.normalize(output, dim=-1,p=2)
         return output
