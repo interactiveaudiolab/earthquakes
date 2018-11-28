@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # [wf] execute train stage
 
+echo $split
+
 mkdir -p runs
 num_run=$(ls runs/ | wc -l |  tr -d ' ')
 run_id="run$num_run"
@@ -21,6 +23,6 @@ python /exp/code/train.py \
     --sample_strategy "sequential" \
     --learning_rate 1e-3 \
     --weight_decay 1e-3 \
-    --split "SAC_20010126_XF_prem/" \
+    --split $split \
     --embedding_size 10 \
     --loss_function "dpcl"

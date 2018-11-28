@@ -29,19 +29,15 @@ class SiameseDataset(Dataset):
     def __len__(self):
         return len(self.dataset)
 
-#class Augmenter(Dataset):
-
 
 class EarthquakeDataset(Dataset):
-    def __init__(self, folder, transforms='demean', length=20000, split='', augmentations='', filter_labels=('positive', 'negative')):
+    def __init__(self, folder, transforms='demean', length=20000, split='', augmentations='', filter_labels=('negative', 'positive')):
         self.folder = folder
         self.files = sorted([os.path.join(folder, x) for x in os.listdir(folder) if '.p' in x])
-        labels = []
+        labels = filter_labels
         for fname in self.files:
             label = fname.split('_')[-1][:-2]
-            if label in filter_labels:
-                labels.append(label)
-            else:
+            if label not in filter_labels:
                 self.files.remove(fname)
         self.labels = sorted(list(set(labels)))
         self.length = length
@@ -59,7 +55,10 @@ class EarthquakeDataset(Dataset):
         one_hot = np.zeros(len(self.labels))
         one_hot[index] = 1
 
-        data = self.pre_transform(sac, self.transforms)
+        sacs = self.pre_transform(sac, self.transforms)
+        data = [self.get_surface_window(s) for s in sacs]
+        data = np.stack(data, axis=0)
+
         data = self.get_target_length_and_transpose(data, self.length)
         weight = 1.0
         data = self.augment(data, self.augmentations)
@@ -69,6 +68,16 @@ class EarthquakeDataset(Dataset):
 
     def __len__(self):
         return len(self.files)
+
+    def get_surface_window(self, sac):
+        velocities = [5.0, 2.5]
+
+        start = int(sac.stats.sac['dist'] / velocities[0])
+        stop = int(sac.stats.sac['dist'] / velocities[1])
+
+        t = sac.stats.starttime
+        sac.trim(t + start, t + stop, nearest_sample=False)
+        return sac.data
 
     def toggle_split(self):
         tmp = self.files
@@ -106,16 +115,15 @@ class EarthquakeDataset(Dataset):
         if 'demean' in transforms:
             sac.detrend(type='demean')
         if 'raw' in transforms:
-            data.append(sac.data)
+            data.append(sac)
         if 'bandpass' in transforms:
             sac_copy = copy.deepcopy(sac)
             sac_copy.filter('bandpass', freqmin=2, freqmax=8, corners=4, zerophase=True)
-            data.append(sac_copy.data)
+            data.append(sac_copy)
         if 'lowpass' in transforms:
             sac_copy = copy.deepcopy(sac)
             sac_copy.filter('lowpass', freq=2)
-            data.append(sac_copy.data)
-        data = np.stack(data, axis=0)
+            data.append(sac_copy)
         return data
 
     @staticmethod

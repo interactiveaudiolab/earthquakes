@@ -11,8 +11,17 @@ pipelines:
         args: !!set
           --ipc=host: null
           --runtime=nvidia: null
-          --volume=/home/vivian/research/earthquakes/earthquakes/:/exp: null
-    parameters: []
+          --volume=/home/prem/research/earthquakes/:/exp: null
+    parameters:
+    - split: SAC_20010126_XF_prem
+    - split: SAC_20021102_XF_prem
+    - split: SAC_20030925_XF_prem
+    - split: SAC_20030927_XF_prem
+    - split: SAC_20041226_2_XF_prem
+    - split: SAC_20041226_XF_prem
+    - split: SAC_20050328_XF_prem
+    - split: SAC_20050724_XF_prem
+    - split: SAC_20100227_Chile_prem
     path: pipelines/convolutional-siamese
     requirements: {}
     stages:
@@ -42,7 +51,7 @@ pipelines:
         args: !!set
           --ipc=host: null
           --runtime=nvidia: null
-          --volume=/home/vivian/research/earthquakes/earthquakes/:/exp: null
+          --volume=/home/prem/research/earthquakes/:/exp: null
     parameters: []
     path: pipelines/fully-connected-siamese
     requirements: {}
@@ -56,7 +65,7 @@ pipelines:
         args: !!set
           --ipc=host: null
           --runtime=runc: null
-          --volume=/home/vivian/research/earthquakes/earthquakes/data:/data: null
+          --volume=/home/prem/research/earthquakes/data:/data: null
     path: pipelines/prepare-data
     requirements: {}
     stages:
