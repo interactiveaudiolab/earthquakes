@@ -8,7 +8,7 @@ class DilatedConvolutional(nn.Module):
         Args:
             embedding_size ([type]): [description]
     """
-    def __init__(self, embedding_size, num_layers=10, num_channels=16, downsample=True):
+    def __init__(self, embedding_size, num_layers=10, num_channels=16, downsample=False):
         super(DilatedConvolutional, self).__init__()
 
         self.num_layers = num_layers
@@ -50,6 +50,6 @@ class DilatedConvolutional(nn.Module):
 
     def forward(self, input):
         output = self.main(input).squeeze(-1)
-        #output = self.fc(output)
+        output = nn.functional.sigmoid(self.fc(output))
         output = nn.functional.normalize(output, dim=-1,p=2)
         return output

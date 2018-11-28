@@ -16,11 +16,11 @@ python /exp/code/train.py \
     --num_workers 10 \
     --num_epochs 100 \
     --transforms "bandpass:whiten" \
-    --augmentations "noise:amplitude" \
-    --length 50000 \
+    --augmentations "amplitude:noise" \
+    --length 15000 \
     --sample_strategy "sequential" \
     --learning_rate 1e-3 \
-    --weight_decay 1e-3 \
+    --weight_decay 1e-2 \
     --split $split \
-    --embedding_size 10 \
+    --embedding_size 20 \
     --loss_function "dpcl"

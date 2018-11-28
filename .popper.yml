@@ -13,7 +13,6 @@ pipelines:
           --runtime=nvidia: null
           --volume=/home/prem/research/earthquakes/:/exp: null
     parameters:
-    - split: SAC_20010126_XF_prem
     - split: SAC_20021102_XF_prem
     - split: SAC_20030925_XF_prem
     - split: SAC_20030927_XF_prem
@@ -22,6 +21,7 @@ pipelines:
     - split: SAC_20050328_XF_prem
     - split: SAC_20050724_XF_prem
     - split: SAC_20100227_Chile_prem
+    - split: SAC_20010126_XF_prem
     path: pipelines/convolutional-siamese
     requirements: {}
     stages:

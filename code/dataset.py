@@ -90,10 +90,12 @@ class EarthquakeDataset(Dataset):
         for i, fname in enumerate(self.files):
             with open(fname, 'rb') as f:
                 earthquake = pickle.load(f)
-            if earthquake['name'] in split:
-                split_files.append(fname)
-            else:
-                remaining_files.append(fname)
+            #hack to skip noisy earthquake
+            if earthquake['name'] not in 'SAC_20010126_XF_prem':
+                if earthquake['name'] in split:
+                    split_files.append(fname)
+                else:
+                    remaining_files.append(fname)
         return split_files, remaining_files
 
     def get_target_length_and_transpose(self, data, target_length):
@@ -137,17 +139,17 @@ class EarthquakeDataset(Dataset):
 
     @staticmethod
     def augment(data, augmentations):
-        if 'amplitude' in augmentations:
-            start_gain, end_gain = [np.random.random(), np.random.random()]
-            amplitude_mod = np.linspace(start_gain, end_gain, num=data.shape[-1])
-            data *= amplitude_mod
+        coin_flip = np.random.random()
+        if coin_flip > .5:
+            if 'amplitude' in augmentations:
+                start_gain, end_gain = [np.random.random(), np.random.random()]
+                amplitude_mod = np.linspace(start_gain, end_gain, num=data.shape[-1])
+                data *= amplitude_mod
 
-        if 'noise' in augmentations:
-            std = data.std() * np.random.uniform(1, 2)
-            mean = data.mean()
-            noise = np.random.normal(loc=mean, scale=std, size=data.shape)
-            coin_flip = np.random.random()
-            if coin_flip > .5:
+            if 'noise' in augmentations:
+                std = data.std() * np.random.uniform(1, 2)
+                mean = data.mean()
+                noise = np.random.normal(loc=mean, scale=std, size=data.shape)
                 data += noise
             
         return data
