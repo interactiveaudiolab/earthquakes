@@ -3,9 +3,13 @@ import numpy as np
 import os
 from tqdm import trange
 import pickle
-from utils import save_file
+from utils import save_file, parallel_process
+from multiprocessing import cpu_count
 
-folders = [os.path.join('/data/raw/trigger', x) for x in os.listdir('/data/raw/trigger')]
+num_cpu = cpu_count() - 2
+data_dir = 'tremor'
+
+folders = [os.path.join('/data/raw/', data_dir, x) for x in os.listdir(os.path.join('/data/raw/', data_dir))]
 
 def read_surface_window(f):
     f = open(f)
@@ -16,31 +20,28 @@ def read_surface_window(f):
     f.close()
     return d
 
+def process_file(earthquake_file, directory, target_directory, label):
+    earthquake = obspy.read(os.path.join(directory, earthquake_file))[0]
+    earthquake.resample(sampling_rate=20, window='hanning', no_filter=True, strict_length=False)
+    data_dict = {}
+
+    data_dict['data'] = earthquake
+    data_dict['label'] = label
+    data_dict['name'] = directory.split('/')[-2]
+
+    save_file(os.path.join(target_directory, '%s_%s_%s.p' % (label, data_dict['name'], earthquake_file)), data_dict)
 
 def load_data(directory, label, target_directory):
     if not os.path.exists(directory):
         return []
-    earthquake_files = [x for x in os.listdir(directory) if '.SAC' in x]
+    earthquake_files = [{'earthquake_file': x, 'directory': directory, 'target_directory': target_directory, 'label': label} for x in os.listdir(directory) if '.SAC' in x]
 
-    progress_bar = trange(len(earthquake_files))
     if len(earthquake_files) == 0:
         return []
 
-    velocities = [5.0, 2.5]
-    for i in progress_bar:
-        earthquake_file = earthquake_files[i]
-        progress_bar.set_description(os.path.join(directory, earthquake_file))
-        earthquake = obspy.read(os.path.join(directory, earthquake_file))[0]
-        earthquake.resample(sampling_rate=20, window='hanning', no_filter=True, strict_length=False)
-        data_dict = {}
+    parallel_process(earthquake_files, process_file, use_kwargs=True, n_jobs=num_cpu)        
 
-        data_dict['data'] = earthquake
-        data_dict['label'] = label
-        data_dict['name'] = directory.split('/')[-2]
-
-        save_file(os.path.join(target_directory, '%s_%s_%s.p' % (label, data_dict['name'], earthquake_file)), data_dict)
-
-target_directory = '/data/trigger/prepared'
+target_directory = os.path.join('/data/prepared', data_dir)
 os.makedirs(target_directory, exist_ok=True)
 for f in folders:
     load_data(os.path.join(f, 'positive'), 'positive', target_directory)

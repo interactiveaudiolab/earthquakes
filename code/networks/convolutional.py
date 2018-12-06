@@ -25,31 +25,35 @@ class DilatedConvolutional(nn.Module):
             self.main.add_module('downsample', downsample)
         self.main.add_module('init_conv', nn.Conv1d(in_channels=1,
                                                    out_channels=num_channels,
-                                                   kernel_size=2,
-                                                   dilation=1,
+                                                   kernel_size=3,
                                                    bias=False))
+        self.main.add_module('init_bn', nn.BatchNorm1d(num_channels))
         self.main.add_module('init_relu', nn.ReLU())
 
         for i in range(1, self.num_layers):
-            self.main.add_module(str(i) + '_conv1x1', nn.Conv1d(in_channels=num_channels, 
-                                                                out_channels=num_channels,
-                                                                kernel_size=1,
-                                                                bias=False))
-            self.main.add_module(str(i) + '_bn1', nn.BatchNorm1d(num_channels))
-            self.main.add_module(str(i) + '_relu', nn.ReLU())
+            # self.main.add_module(str(i) + '_conv1x1', nn.Conv1d(in_channels=num_channels, 
+            #                                                     out_channels=num_channels,
+            #                                                     kernel_size=1,
+            #                                                     bias=False))
+            # self.main.add_module(str(i) + '_bn1', nn.BatchNorm1d(num_channels))
+            # self.main.add_module(str(i) + '_relu', nn.ReLU())
             self.main.add_module(str(i), nn.Conv1d(in_channels=num_channels,
                                                    out_channels=num_channels,
-                                                   kernel_size=2,
-                                                   dilation=2**i,
+                                                   kernel_size=3,
                                                    bias=False))
             self.main.add_module(str(i) + '_bn2', nn.BatchNorm1d(num_channels))
+            #self.main.add_module(str(i) + '_in2', nn.InstanceNorm1d(num_channels))
+            self.main.add_module(str(i) + '_relu', nn.ReLU())
+            self.main.add_module(str(i) + '_maxpool', nn.MaxPool1d(2))
             
             
-        self.main.add_module('pool', nn.AdaptiveMaxPool1d(1))
-        self.fc = nn.Linear(num_channels, embedding_size)
+        self.max_pool = nn.AdaptiveMaxPool1d(1)
+        self.avg_pool = nn.AdaptiveAvgPool1d(1)
+        self.fc = nn.Linear(num_channels, embedding_size, bias=False)
 
     def forward(self, input):
-        output = self.main(input).squeeze(-1)
-        output = nn.functional.sigmoid(self.fc(output))
-        output = nn.functional.normalize(output, dim=-1,p=2)
+        output = self.main(input)
+        pools = self.max_pool(output).squeeze(-1)
+        output = nn.functional.tanh(self.fc(pools))
+        #output = nn.functional.normalize(output, dim=-1,p=2)
         return output

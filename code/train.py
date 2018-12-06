@@ -57,7 +57,7 @@ dataloader = DataLoader(dataset,
                         batch_size=args.batch_size,
                         num_workers=args.num_workers,
                         sampler=sample_strategy,
-                        drop_last=True)
+                        drop_last=False)
 
 
 class_func = utils.model_functions[args.model_type]

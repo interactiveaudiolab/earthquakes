@@ -37,6 +37,7 @@ dataset = EarthquakeDataset(folder=args.dataset_directory,
                             transforms=args.transforms,
                             augmentations='',
                             length=args.length,
+                            mode='test',
                             split=args.split)
 
 model, _, _ = utils.load_model(args.output_directory, device_target='cuda')
@@ -45,7 +46,7 @@ model.eval()
 
 def get_embeddings(dataset, model):
     dataloader = DataLoader(dataset,
-                        batch_size=args.batch_size,
+                        batch_size=1,
                         num_workers=args.num_workers,
                         drop_last=False)
     
@@ -63,10 +64,11 @@ def get_embeddings(dataset, model):
 def train_svm(embeddings, labels):
     print(embeddings.shape, labels.shape)
     #svc = SVC(kernel='rbf')
-    svc = KNeighborsClassifier()
+    svc = KNeighborsClassifier(n_neighbors=11)
     svc.fit(embeddings, np.argmax(labels, axis=-1))
     return svc
 
+print(args.split)
 print('Getting train embeddings')
 embeddings, labels = get_embeddings(dataset, model)
 plt.clf()
@@ -92,10 +94,14 @@ print('Predicting on test embeddings with KNN')
 predictions = svc.predict(embeddings)
 ground_truth = np.argmax(labels, axis=-1)
 
-cm = ConfusionMatrix(predict_vector=predictions, actual_vector=ground_truth)
+try:
+    cm = ConfusionMatrix(predict_vector=predictions, actual_vector=ground_truth)
+    results = str(cm)
+except:
+    results = str(sum(predictions == ground_truth) / len(ground_truth))
 
 print('Results')
-print(str(cm))
+print(results)
 
 with open(os.path.join(args.output_directory, 'results.txt'), 'w') as f:
-    f.write(str(cm))
+    f.write(results)

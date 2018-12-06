@@ -4,6 +4,7 @@ import obspy
 import pickle
 import numpy as np
 import copy
+import random
 
 class SiameseDataset(Dataset):
     def __init__(self, dataset):
@@ -13,13 +14,8 @@ class SiameseDataset(Dataset):
         item_one = self.dataset[i]
         item_two = self.dataset[np.random.randint(0, len(self.dataset))]
 
-        coin_flip = np.random.random()
-        if coin_flip > .5:
-            while np.argmax(item_two['label']) == np.argmax(item_one['label']):
-                item_two = self.dataset[np.random.randint(0, len(self.dataset))]
-        else:
-            while np.argmax(item_two['label']) != np.argmax(item_one['label']):
-                item_two = self.dataset[np.random.randint(0, len(self.dataset))]
+        while np.argmax(item_two['label']) == np.argmax(item_one['label']):
+            item_two = self.dataset[np.random.randint(0, len(self.dataset))]
 
         data = np.vstack([item_one['data'], item_two['data']])
         label = np.vstack([item_one['label'], item_two['label']])
@@ -31,9 +27,12 @@ class SiameseDataset(Dataset):
 
 
 class EarthquakeDataset(Dataset):
-    def __init__(self, folder, transforms='demean', length=20000, split='', augmentations='', filter_labels=('negative', 'positive')):
+    def __init__(self, folder, transforms='demean', length=20000, split='', augmentations='', filter_labels=('negative', 'positive'), mode='train'):
         self.folder = folder
         self.files = sorted([os.path.join(folder, x) for x in os.listdir(folder) if '.p' in x])
+        random.seed(0)
+        random.shuffle(self.files)
+
         labels = filter_labels
         for fname in self.files:
             label = fname.split('_')[-1][:-2]
@@ -45,6 +44,22 @@ class EarthquakeDataset(Dataset):
         self.augmentations = augmentations.split(':')
         self.split = split.split(':')
         self.split, self.files = self.filter_files(split)
+        self.priors = self.get_prior()
+        self.mode = mode
+
+    def get_prior(self):
+        labels = np.zeros(len(self.labels))
+        for i in range(len(self.files)):
+            with open(self.files[i], 'rb') as f:
+                earthquake = pickle.load(f)
+            label = earthquake['label']
+            index = self.labels.index(label)
+            one_hot = np.zeros(len(self.labels))
+            one_hot[index] = 1
+            labels += one_hot
+        priors = labels / np.sum(labels)
+        return priors
+
 
     def __getitem__(self, i):
         with open(self.files[i], 'rb') as f:
@@ -59,12 +74,14 @@ class EarthquakeDataset(Dataset):
         data = [self.get_surface_window(s) for s in sacs]
         data = np.stack(data, axis=0)
 
-        data = self.get_target_length_and_transpose(data, self.length)
-        weight = 1.0
         data = self.augment(data, self.augmentations)
+        data = self.get_target_length_and_transpose(data, self.length)
+        weight = 1. / self.priors[index]
+        
         data = self.post_transform(data, self.transforms)
+        
 
-        return {'data': data, 'label': one_hot, 'weight': weight}
+        return {'data': data, 'label': one_hot, 'weight': np.sqrt(weight)}
 
     def __len__(self):
         return len(self.files)
@@ -103,12 +120,17 @@ class EarthquakeDataset(Dataset):
         if target_length == 'full':
             target_length = length
         if length > target_length:
-            offset = np.random.randint(0, length - target_length)
+            #offset = int(data.argmax(axis=-1))
+            #data = np.pad(data, ((0, 0), (int(target_length / 2), int(target_length / 2))), mode='constant')
+            if self.mode == 'train':
+                offset = np.random.randint(0, length - target_length)
+            else:
+                offset = 0
         else:
             offset = 0
         pad_length = max(target_length - length, 0)
         pad_tuple = [(0, 0) for k in range(len(data.shape))]
-        pad_tuple[1] = (0, pad_length)
+        pad_tuple[1] = (int(pad_length / 2), int(pad_length / 2) + (length % 2))
         data = np.pad(data, pad_tuple, mode='constant')
         data = data[:, offset:offset+target_length]
         return data
@@ -140,9 +162,9 @@ class EarthquakeDataset(Dataset):
     @staticmethod
     def augment(data, augmentations):
         coin_flip = np.random.random()
-        if coin_flip > .5:
+        if coin_flip > 0.5:
             if 'amplitude' in augmentations:
-                start_gain, end_gain = [np.random.random(), np.random.random()]
+                start_gain, end_gain = [np.random.uniform(0, 2), np.random.uniform(0, 2)]
                 amplitude_mod = np.linspace(start_gain, end_gain, num=data.shape[-1])
                 data *= amplitude_mod
 
