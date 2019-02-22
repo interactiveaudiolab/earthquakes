@@ -9,3 +9,4 @@ data/
 .idea/
 code/models/
 *.pyc
+.DS_Store
