@@ -13,6 +13,9 @@ wget --quiet https://repo.anaconda.com/archive/Anaconda3-5.2.0-Linux-x86_64.sh -
 2. Activate it: `source activate earthquake`
 3. Install the requirements: `pip install -r requirements.txt`
 
+For quick training you will also need an NVIDIA card and CUDA set up so PyTorch can use 
+GPUs for training.
+
 ## Preparing the data
 
 The data should be kept in a directory structure as follows:
