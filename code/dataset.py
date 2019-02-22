@@ -76,7 +76,7 @@ class EarthquakeDataset(Dataset):
 
         data = self.augment(data, self.augmentations)
         data = self.get_target_length_and_transpose(data, self.length)
-        weight = 1. / self.priors[index]
+        weight = 1. # / self.priors[index]
         
         data = self.post_transform(data, self.transforms)
         

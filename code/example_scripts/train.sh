@@ -1,7 +1,7 @@
 python train.py \
     --model_type "conv" \
     --output_directory "models/run0" \
-    --dataset_directory "../data/prepared/trigger/" \
+    --dataset_directory "../data/prepare/trigger/" \
     --batch_size 64 \
     --num_workers 10 \
     --num_epochs 100 \
@@ -11,6 +11,6 @@ python train.py \
     --sample_strategy "sequential" \
     --learning_rate 2e-5 \
     --weight_decay 1e-1 \
-    --split SAC_20021102_XF_prem \
+    --split SAC_20030927_XF_prem \
     --embedding_size 10 \
     --loss_function "dpcl"

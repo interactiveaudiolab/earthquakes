@@ -13,3 +13,4 @@ torchvision
 h5py
 obspy
 pycm
+seaborn

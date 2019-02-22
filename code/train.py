@@ -30,12 +30,6 @@ with open(os.path.join(args.output_directory, 'args.json'), 'w') as f:
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-if os.path.isdir(os.path.join(args.output_directory, 'checkpoints')):
-    if args.overwrite:
-        print('Deleting existing directory: ', args.output_directory)
-        subprocess.call(['rm','-rf', args.output_directory])
-        print("Found existing directory. Sleeping for 5 seconds after deleting existing directory!")
-
 writer = SummaryWriter(log_dir=args.output_directory)
 args.log_dir = writer.file_writer.get_logdir()
 
