@@ -1,6 +1,6 @@
 {
     "git.ignoreLimitWarning": true,
-    "python.pythonPath": "earthquake/bin/python",
+    "python.pythonPath": "/Users/prem/miniconda3/envs/nussl/bin/python",
     "python.linting.mypyArgs": [
         "--ignore-missing-imports",
         "--follow-imports=silent",

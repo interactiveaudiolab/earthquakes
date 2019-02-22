@@ -12,7 +12,7 @@ class ContrastiveLoss(nn.Module):
         self.margin = margin
         self.dist = nn.modules.distance.PairwiseDistance()
 
-    def forward(self, outputs, labels):
+    def forward(self, outputs, labels, weights=None):
         output1 = outputs[:, 0, :]
         output2 = outputs[:, 1, :]
         label = (labels[:, 0, :] * labels[:, 1, :]).sum()

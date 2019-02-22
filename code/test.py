@@ -17,6 +17,11 @@ from sklearn.neighbors import KNeighborsClassifier
 from pycm import ConfusionMatrix
 
 matplotlib.use('agg')
+
+import seaborn as sns
+from sklearn.decomposition import PCA
+import matplotlib.patches as mpatches
+import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -100,8 +105,69 @@ try:
 except:
     results = str(sum(predictions == ground_truth) / len(ground_truth))
 
-print('Results')
-print(results)
-
 with open(os.path.join(args.output_directory, 'results.txt'), 'w') as f:
     f.write(results)
+
+
+print("Visualizing with KDE plot")
+
+font = {'family' : 'normal',
+        'weight' : 'normal',
+        'size'   : 14}
+
+matplotlib.rc('font', **font)
+
+
+
+dataset.toggle_split()
+plt.figure(figsize=(10, 8))
+embeddings, labels = get_embeddings(dataset, model)
+pca = PCA(n_components=2)
+pca.fit(embeddings)
+output = pca.transform(embeddings[labels.argmax(axis=-1) == 0])
+sns.kdeplot(output[:, 0], output[:, 1], cmap="Blues_d", shade=False, shade_lowest=False, cut=3, gridsize=100)
+
+label_patches = []
+
+label_patch = mpatches.Patch(
+        color=sns.color_palette('Blues_d')[2],
+        label='Negative (train)')
+label_patches.append(label_patch)
+
+output = pca.transform(embeddings[labels.argmax(axis=-1) == 1])
+sns.kdeplot(output[:, 0], output[:, 1], cmap="Reds_d", shade=False, shade_lowest=False, cut=3, gridsize=100)
+
+label_patch = mpatches.Patch(
+        color=sns.color_palette('Reds_d')[2],
+        label='Positive (train)')
+label_patches.append(label_patch)
+
+
+dataset.toggle_split()
+print(len(dataset))
+
+embeddings, labels = get_embeddings(dataset, model)
+output = pca.transform(embeddings[labels.argmax(axis=-1) == 0])
+plt.scatter(output[:, 0], output[:, 1], color='darkblue', marker='o', facecolors='none', edgecolors='darkblue',s=100)
+
+label_patches.append(mlines.Line2D([], [], color='darkblue', marker='o',markerfacecolor='none', linestyle='None',
+                          markersize=10, label='Negative (test)'))
+
+output = pca.transform(embeddings[labels.argmax(axis=-1) == 1])
+plt.scatter(output[:, 0], output[:, 1], color='darkred', marker='x', edgecolors='darkred', s=100)
+
+label_patches.append(mlines.Line2D([], [], color='darkred', marker='x', linestyle='None',
+                          markersize=10, label='Positive'))
+
+plt.title('PCA of embeddings for train and test')
+plt.xlabel('Principle Component 1')
+plt.ylabel('Principle Component 2')
+
+
+plt.legend(handles=label_patches, numpoints=1)
+
+plt.xlim([-1.0, 2.2])
+plt.ylim([-.85, .85])
+
+plt.tight_layout()
+plt.savefig(os.path.join(args.output_directory, 'combined.png'))

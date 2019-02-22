@@ -23,6 +23,8 @@ tqdm.monitor_interval = 0
 parser = construct_parser()
 args = parser.parse_args()
 
+os.makedirs(args.output_directory, exist_ok=True)
+
 with open(os.path.join(args.output_directory, 'args.json'), 'w') as f:
     json.dump(vars(args), f, sort_keys=True, indent=4)
 

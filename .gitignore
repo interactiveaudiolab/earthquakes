@@ -7,3 +7,5 @@ earthquake/
 .SAC
 data/
 .idea/
+code/models/
+*.pyc
