@@ -157,7 +157,7 @@ output = pca.transform(embeddings[labels.argmax(axis=-1) == 1])
 plt.scatter(output[:, 0], output[:, 1], color='darkred', marker='x', edgecolors='darkred', s=100)
 
 label_patches.append(mlines.Line2D([], [], color='darkred', marker='x', linestyle='None',
-                          markersize=10, label='Positive'))
+                          markersize=10, label='Positive (test)'))
 
 plt.title('PCA of embeddings for train and test')
 plt.xlabel('Principle Component 1')
