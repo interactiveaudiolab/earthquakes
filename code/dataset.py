@@ -33,12 +33,12 @@ class EarthquakeDataset(Dataset):
         random.seed(0)
         random.shuffle(self.files)
 
-        labels = filter_labels
-        for fname in self.files:
-            label = fname.split('_')[-1][:-2]
+        filter_labels = list(filter_labels)
+        for fname in self.files:    
+            label = fname.split('/')[-1].split('_')[0]
             if label not in filter_labels:
                 self.files.remove(fname)
-        self.labels = sorted(list(set(labels)))
+        self.labels = sorted(filter_labels)
         self.length = length
         self.transforms = transforms.split(':')
         self.augmentations = augmentations.split(':')
