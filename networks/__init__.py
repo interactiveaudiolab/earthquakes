@@ -1,0 +1,2 @@
+from .fully_connected import FullyConnected
+from .convolutional import DilatedConvolutional

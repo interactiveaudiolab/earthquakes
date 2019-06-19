@@ -1,0 +1,18 @@
+{
+    "augmentations": "amplitude:noise",
+    "batch_size": 64,
+    "dataset_directory": "../data/prepared/trigger/",
+    "embedding_size": 10,
+    "learning_rate": 2e-05,
+    "length": 8192,
+    "loss_function": "dpcl",
+    "model_type": "conv",
+    "num_epochs": 100,
+    "num_workers": 10,
+    "output_directory": "models/run0",
+    "sample_strategy": "sequential",
+    "split": "SAC_20021102_XF_prem",
+    "training_strategy": "siamese",
+    "transforms": "bandpass:whiten",
+    "weight_decay": 0.1
+}
