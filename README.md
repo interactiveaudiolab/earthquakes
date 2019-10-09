@@ -1,5 +1,11 @@
 # Code for training and evaluating earthquake prediction models.
 
+This repository contains supporting code for the paper:
+
+"Automating the Detection of Dynamically Triggered Earthquakes via a Deep Metric Learning Algorithm"
+
+Authors: Vivian Tang, Prem Seetharaman, Kevin Chao, Bryan Pardo, Suzan van der Lee
+
 ## Environment setup
 
 Install Anaconda3 (Python3) with the following command on an Ubuntu machine:
